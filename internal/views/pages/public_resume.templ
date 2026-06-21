@@ -1,0 +1,325 @@
+package pages
+
+import "github.com/erick/curriculo/internal/models"
+
+templ PublicResume(resume *models.ResumeDetail) {
+	<!DOCTYPE html>
+	<html lang="pt-BR">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ resume.PersonalName } — Currículo</title>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script>
+				tailwind.config = {
+					theme: {
+						extend: {
+							fontFamily: { sans: ['Inter', 'sans-serif'] },
+							colors: {
+								brand: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' }
+							}
+						}
+					}
+				}
+			</script>
+		</head>
+		<body class="bg-gray-50 font-sans text-gray-900 antialiased min-h-screen">
+			<div class="min-h-screen flex flex-col items-center py-8 px-4 sm:py-12">
+				<!-- Resume document -->
+				<div class="w-full max-w-[680px] bg-white rounded-xl shadow-sm overflow-hidden print:shadow-none print:rounded-none">
+					if resume.TemplateName == "moderno" {
+						@publicResumeModerno(resume)
+					} else if resume.TemplateName == "classico" {
+						@publicResumeClassico(resume)
+					} else {
+						@publicResumeMinimalista(resume)
+					}
+				</div>
+				<!-- Watermark -->
+				<div class="mt-8 text-center print:hidden">
+					<p class="text-xs text-gray-400">
+						Criado com
+						<span class="font-medium text-gray-500">MEU</span>
+						<span class="font-extrabold text-brand-600">CURRICULO</span>
+					</p>
+				</div>
+			</div>
+		</body>
+	</html>
+}
+
+templ publicResumeModerno(resume *models.ResumeDetail) {
+	<div class="p-8 sm:p-12 space-y-6">
+		<!-- Header -->
+		<div class="border-b border-gray-200 pb-5">
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{ resume.PersonalName }</h1>
+			if resume.PersonalTitle != "" {
+				<p class="text-sm sm:text-base font-medium text-brand-600 mt-1">{ resume.PersonalTitle }</p>
+			}
+			<div class="flex flex-wrap gap-3 mt-3 text-xs sm:text-sm text-gray-500">
+				if resume.Email != "" {
+					<span class="inline-flex items-center gap-1">
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<rect width="20" height="16" x="2" y="4" rx="2"></rect>
+							<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+						</svg>
+						{ resume.Email }
+					</span>
+				}
+				if resume.Phone != "" {
+					<span class="inline-flex items-center gap-1">
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+						</svg>
+						{ resume.Phone }
+					</span>
+				}
+				if resume.Location != "" {
+					<span class="inline-flex items-center gap-1">
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+							<circle cx="12" cy="10" r="3"></circle>
+						</svg>
+						{ resume.Location }
+					</span>
+				}
+			</div>
+		</div>
+		<!-- Summary -->
+		if resume.Summary != "" {
+			<div>
+				<p class="text-sm text-gray-600 leading-relaxed">{ resume.Summary }</p>
+			</div>
+		}
+		<!-- Experience -->
+		if len(resume.Experience) > 0 {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Experiência</h2>
+				<div class="space-y-4">
+					for _, exp := range resume.Experience {
+						<div>
+							<div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-0.5">
+								<p class="text-sm font-semibold text-gray-800">
+									{ exp.Company }
+									if exp.Role != "" {
+										<span class="text-gray-500 font-normal"> — { exp.Role }</span>
+									}
+								</p>
+								if exp.Period != "" {
+									<span class="text-xs text-gray-400 shrink-0">{ exp.Period }</span>
+								}
+							</div>
+							if exp.Description != "" {
+								<p class="text-xs text-gray-600 mt-1 leading-relaxed">{ exp.Description }</p>
+							}
+						</div>
+					}
+				</div>
+			</div>
+		}
+		<!-- Education -->
+		if len(resume.Education) > 0 {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Educação</h2>
+				<div class="space-y-3">
+					for _, edu := range resume.Education {
+						<div>
+							<p class="text-sm font-semibold text-gray-800">{ edu.Institution }</p>
+							<p class="text-xs text-gray-600">
+								{ edu.Degree }
+								if edu.Period != "" {
+									<span> — { edu.Period }</span>
+								}
+							</p>
+						</div>
+					}
+				</div>
+			</div>
+		}
+		<!-- Skills -->
+		if len(resume.Skills) > 0 {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Habilidades</h2>
+				<div class="flex flex-wrap gap-1.5">
+					for _, skill := range resume.Skills {
+						<span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-700">{ skill.Name }</span>
+					}
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ publicResumeClassico(resume *models.ResumeDetail) {
+	<div class="p-8 sm:p-12 space-y-5">
+		<!-- Header -->
+		<div class="text-center border-b-2 border-gray-900 pb-4">
+			<h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase tracking-wide">{ resume.PersonalName }</h1>
+			if resume.PersonalTitle != "" {
+				<p class="text-sm text-gray-600 mt-1">{ resume.PersonalTitle }</p>
+			}
+			<div class="flex flex-wrap justify-center gap-4 mt-2 text-xs text-gray-500">
+				if resume.Email != "" {
+					<span>{ resume.Email }</span>
+				}
+				if resume.Phone != "" {
+					<span>{ resume.Phone }</span>
+				}
+				if resume.Location != "" {
+					<span>{ resume.Location }</span>
+				}
+			</div>
+		</div>
+		<!-- Summary -->
+		if resume.Summary != "" {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase border-b border-gray-300 pb-1 mb-2">Perfil</h2>
+				<p class="text-xs text-gray-600 leading-relaxed">{ resume.Summary }</p>
+			</div>
+		}
+		<!-- Experience -->
+		if len(resume.Experience) > 0 {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase border-b border-gray-300 pb-1 mb-2">Experiência Profissional</h2>
+				<div class="space-y-3">
+					for _, exp := range resume.Experience {
+						<div>
+							<p class="text-sm font-bold text-gray-800">
+								if exp.Role != "" {
+									{ exp.Role }
+								} else {
+									{ exp.Company }
+								}
+							</p>
+							<p class="text-xs text-gray-500 italic">
+								{ exp.Company }
+								if exp.Period != "" {
+									<span> | { exp.Period }</span>
+								}
+							</p>
+							if exp.Description != "" {
+								<p class="text-xs text-gray-600 mt-1 leading-relaxed">{ exp.Description }</p>
+							}
+						</div>
+					}
+				</div>
+			</div>
+		}
+		<!-- Education -->
+		if len(resume.Education) > 0 {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase border-b border-gray-300 pb-1 mb-2">Formação Acadêmica</h2>
+				<div class="space-y-2">
+					for _, edu := range resume.Education {
+						<div>
+							<p class="text-sm font-bold text-gray-800">{ edu.Degree }</p>
+							<p class="text-xs text-gray-500 italic">
+								{ edu.Institution }
+								if edu.Period != "" {
+									<span> | { edu.Period }</span>
+								}
+							</p>
+						</div>
+					}
+				</div>
+			</div>
+		}
+		<!-- Skills -->
+		if len(resume.Skills) > 0 {
+			<div>
+				<h2 class="text-xs font-bold text-gray-900 uppercase border-b border-gray-300 pb-1 mb-2">Competências</h2>
+				<p class="text-xs text-gray-700">
+					for i, skill := range resume.Skills {
+						if i > 0 {
+							<span> • </span>
+						}
+						{ skill.Name }
+					}
+				</p>
+			</div>
+		}
+	</div>
+}
+
+templ publicResumeMinimalista(resume *models.ResumeDetail) {
+	<div class="p-8 sm:p-12 space-y-6">
+		<!-- Header -->
+		<div>
+			<h1 class="text-3xl sm:text-4xl font-light text-gray-900">{ resume.PersonalName }</h1>
+			if resume.PersonalTitle != "" {
+				<p class="text-sm text-gray-400 mt-1">{ resume.PersonalTitle }</p>
+			}
+			<div class="flex flex-wrap gap-4 mt-3 text-xs text-gray-400">
+				if resume.Email != "" {
+					<span>{ resume.Email }</span>
+				}
+				if resume.Phone != "" {
+					<span>{ resume.Phone }</span>
+				}
+				if resume.Location != "" {
+					<span>{ resume.Location }</span>
+				}
+			</div>
+		</div>
+		<!-- Summary -->
+		if resume.Summary != "" {
+			<div>
+				<p class="text-xs text-gray-500 leading-relaxed">{ resume.Summary }</p>
+			</div>
+		}
+		<!-- Experience -->
+		if len(resume.Experience) > 0 {
+			<div class="space-y-3">
+				for _, exp := range resume.Experience {
+					<div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-3">
+						<span class="text-xs text-gray-400">
+							if exp.Period != "" {
+								{ exp.Period }
+							}
+						</span>
+						<div>
+							if exp.Role != "" {
+								<p class="text-sm font-medium text-gray-800">{ exp.Role }</p>
+							}
+							<p class="text-xs text-gray-500">{ exp.Company }</p>
+							if exp.Description != "" {
+								<p class="text-xs text-gray-400 mt-0.5 leading-relaxed">{ exp.Description }</p>
+							}
+						</div>
+					</div>
+				}
+			</div>
+		}
+		<!-- Education -->
+		if len(resume.Education) > 0 {
+			<div class="space-y-2">
+				for _, edu := range resume.Education {
+					<div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-3">
+						<span class="text-xs text-gray-400">
+							if edu.Period != "" {
+								{ edu.Period }
+							}
+						</span>
+						<div>
+							<p class="text-sm font-medium text-gray-800">{ edu.Degree }</p>
+							<p class="text-xs text-gray-500">{ edu.Institution }</p>
+						</div>
+					</div>
+				}
+			</div>
+		}
+		<!-- Skills -->
+		if len(resume.Skills) > 0 {
+			<div>
+				<div class="flex flex-wrap gap-x-4 gap-y-1">
+					for _, skill := range resume.Skills {
+						<span class="text-xs text-gray-500">{ skill.Name }</span>
+					}
+				</div>
+			</div>
+		}
+	</div>
+}

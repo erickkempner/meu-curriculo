@@ -1,0 +1,119 @@
+package layouts
+
+templ Base(title string) {
+	<!DOCTYPE html>
+	<html lang="pt-BR">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } | Meu Currículo</title>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script>
+				tailwind.config = {
+					theme: {
+						extend: {
+							fontFamily: { sans: ['Inter', 'sans-serif'] },
+							colors: {
+								brand: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' }
+							}
+						}
+					}
+				}
+			</script>
+			<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+			<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+			<link rel="stylesheet" href="/assets/css/custom.css"/>
+		</head>
+		<body class="bg-gray-50 font-sans text-gray-900 antialiased min-h-screen">
+			{ children... }
+		</body>
+	</html>
+}
+
+templ AuthLayout(title string) {
+	@Base(title) {
+		<div class="min-h-screen flex">
+			{ children... }
+		</div>
+	}
+}
+
+templ AppLayout(title string) {
+	@AppLayoutWithUser(title, "")
+}
+
+templ AppLayoutWithUser(title string, userName string) {
+	@Base(title) {
+		<div class="min-h-screen flex flex-col">
+			@Navbar(userName)
+			<main class="flex-1">
+				{ children... }
+			</main>
+		</div>
+	}
+}
+
+templ Navbar(userName string) {
+	<header class="bg-white border-b border-gray-100">
+		<div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+			<div class="flex h-16 items-center justify-between">
+				<a href="/resumes" class="flex items-center gap-1.5">
+					<span class="text-base font-medium text-gray-400">MEU</span>
+					<span class="text-base font-extrabold text-brand-600">CURRICULO</span>
+				</a>
+				<div class="relative" x-data="{ open: false }">
+					<button @click="open = !open" class="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition">
+						if userName != "" {
+							<span class="hidden sm:block text-sm text-gray-700">{ userName }</span>
+						}
+						<div class="size-9 rounded-full bg-brand-600 flex items-center justify-center">
+							if userName != "" {
+								<span class="text-sm font-bold text-white">{ string([]rune(userName)[0:1]) }</span>
+							} else {
+								<svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+									<circle cx="12" cy="7" r="4"></circle>
+								</svg>
+							}
+						</div>
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m6 9 6 6 6-6"></path>
+						</svg>
+					</button>
+					<!-- Dropdown -->
+					<div
+						x-show="open"
+						@click.away="open = false"
+						x-transition:enter="transition ease-out duration-100"
+						x-transition:enter-start="opacity-0 scale-95"
+						x-transition:enter-end="opacity-100 scale-100"
+						x-transition:leave="transition ease-in duration-75"
+						x-transition:leave-start="opacity-100 scale-100"
+						x-transition:leave-end="opacity-0 scale-95"
+						class="absolute right-0 mt-2 w-48 rounded-lg bg-white border border-gray-200 shadow-lg py-1 z-50"
+						x-cloak
+					>
+						if userName != "" {
+							<div class="px-4 py-2 border-b border-gray-100">
+								<p class="text-sm font-medium text-gray-900 truncate">{ userName }</p>
+							</div>
+						}
+						<form action="/logout" method="POST">
+							<button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-2">
+								<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+									<polyline points="16 17 21 12 16 7"></polyline>
+									<line x1="21" y1="12" x2="9" y2="12"></line>
+								</svg>
+								Sair da conta
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+}

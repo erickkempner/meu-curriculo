@@ -1,0 +1,192 @@
+package pages
+
+import "github.com/erick/curriculo/internal/views/layouts"
+
+templ Login() {
+	@LoginWithError("")
+}
+
+templ LoginWithError(errorMsg string) {
+	@layouts.AuthLayout("Entrar") {
+		<!-- Left Panel - Brand -->
+		<div class="hidden lg:flex lg:w-1/2 bg-gray-900 flex-col items-center justify-center p-12">
+			<div class="flex flex-col items-center gap-5">
+				<div class="w-14 h-16 bg-blue-500 rounded-lg flex flex-col items-center justify-center gap-1 p-2">
+					<div class="w-full h-1 bg-white rounded-full"></div>
+					<div class="w-full h-1 bg-white rounded-full"></div>
+					<div class="w-3/4 h-1 bg-white rounded-full"></div>
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-2xl font-medium text-gray-400">MEU</span>
+					<span class="text-2xl font-extrabold text-white">CURRICULO</span>
+				</div>
+				<p class="text-sm text-gray-500">Crie currículos profissionais em minutos</p>
+			</div>
+		</div>
+		<!-- Right Panel - Form -->
+		<div class="flex flex-1 items-center justify-center p-6 sm:p-12">
+			<div class="w-full max-w-sm space-y-6">
+				<!-- Mobile logo -->
+				<div class="lg:hidden flex flex-col items-center gap-3 mb-8">
+					<div class="w-12 h-14 bg-blue-500 rounded-lg flex flex-col items-center justify-center gap-1 p-2">
+						<div class="w-full h-0.5 bg-white rounded-full"></div>
+						<div class="w-full h-0.5 bg-white rounded-full"></div>
+						<div class="w-3/4 h-0.5 bg-white rounded-full"></div>
+					</div>
+					<div class="flex items-center gap-1.5">
+						<span class="text-lg font-medium text-gray-400">MEU</span>
+						<span class="text-lg font-extrabold text-brand-600">CURRICULO</span>
+					</div>
+				</div>
+				<div>
+					<h1 class="text-2xl font-bold text-gray-900">Entrar</h1>
+					<p class="mt-1 text-sm text-gray-500">Acesse sua conta para gerenciar seus currículos</p>
+				</div>
+				if errorMsg != "" {
+					<div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 flex items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="10"></circle>
+							<line x1="12" y1="8" x2="12" y2="12"></line>
+							<line x1="12" y1="16" x2="12.01" y2="16"></line>
+						</svg>
+						<p class="text-sm text-red-700">{ errorMsg }</p>
+					</div>
+				}
+				<form class="space-y-4" action="/login" method="POST">
+					<div>
+						<label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+						<input
+							type="email"
+							id="email"
+							name="email"
+							placeholder="seu@email.com"
+							required
+							class="mt-1 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition"
+						/>
+					</div>
+					<div>
+						<label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+						<input
+							type="password"
+							id="password"
+							name="password"
+							placeholder="••••••••"
+							required
+							class="mt-1 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition"
+						/>
+					</div>
+					<button
+						type="submit"
+						class="w-full rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition"
+					>
+						Entrar
+					</button>
+				</form>
+				<p class="text-center text-sm text-gray-500">
+					Não tem conta?
+					<a href="/register" class="font-semibold text-brand-600 hover:text-brand-500">Criar conta</a>
+				</p>
+			</div>
+		</div>
+	}
+}
+
+templ Register() {
+	@RegisterWithError("")
+}
+
+templ RegisterWithError(errorMsg string) {
+	@layouts.AuthLayout("Criar Conta") {
+		<!-- Left Panel - Brand -->
+		<div class="hidden lg:flex lg:w-1/2 bg-gray-900 flex-col items-center justify-center p-12">
+			<div class="flex flex-col items-center gap-5">
+				<div class="w-14 h-16 bg-blue-500 rounded-lg flex flex-col items-center justify-center gap-1 p-2">
+					<div class="w-full h-1 bg-white rounded-full"></div>
+					<div class="w-full h-1 bg-white rounded-full"></div>
+					<div class="w-3/4 h-1 bg-white rounded-full"></div>
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-2xl font-medium text-gray-400">MEU</span>
+					<span class="text-2xl font-extrabold text-white">CURRICULO</span>
+				</div>
+				<p class="text-sm text-gray-500">Crie currículos profissionais em minutos</p>
+			</div>
+		</div>
+		<!-- Right Panel - Form -->
+		<div class="flex flex-1 items-center justify-center p-6 sm:p-12">
+			<div class="w-full max-w-sm space-y-6">
+				<!-- Mobile logo -->
+				<div class="lg:hidden flex flex-col items-center gap-3 mb-8">
+					<div class="w-12 h-14 bg-blue-500 rounded-lg flex flex-col items-center justify-center gap-1 p-2">
+						<div class="w-full h-0.5 bg-white rounded-full"></div>
+						<div class="w-full h-0.5 bg-white rounded-full"></div>
+						<div class="w-3/4 h-0.5 bg-white rounded-full"></div>
+					</div>
+					<div class="flex items-center gap-1.5">
+						<span class="text-lg font-medium text-gray-400">MEU</span>
+						<span class="text-lg font-extrabold text-brand-600">CURRICULO</span>
+					</div>
+				</div>
+				<div>
+					<h1 class="text-2xl font-bold text-gray-900">Criar Conta</h1>
+					<p class="mt-1 text-sm text-gray-500">Comece a criar currículos profissionais</p>
+				</div>
+				if errorMsg != "" {
+					<div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 flex items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="10"></circle>
+							<line x1="12" y1="8" x2="12" y2="12"></line>
+							<line x1="12" y1="16" x2="12.01" y2="16"></line>
+						</svg>
+						<p class="text-sm text-red-700">{ errorMsg }</p>
+					</div>
+				}
+				<form class="space-y-4" action="/register" method="POST">
+					<div>
+						<label for="name" class="block text-sm font-medium text-gray-700">Nome completo</label>
+						<input
+							type="text"
+							id="name"
+							name="name"
+							placeholder="Seu nome"
+							required
+							class="mt-1 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition"
+						/>
+					</div>
+					<div>
+						<label for="reg-email" class="block text-sm font-medium text-gray-700">E-mail</label>
+						<input
+							type="email"
+							id="reg-email"
+							name="email"
+							placeholder="seu@email.com"
+							required
+							class="mt-1 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition"
+						/>
+					</div>
+					<div>
+						<label for="reg-password" class="block text-sm font-medium text-gray-700">Senha</label>
+						<input
+							type="password"
+							id="reg-password"
+							name="password"
+							placeholder="Mínimo 8 caracteres"
+							required
+							class="mt-1 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition"
+						/>
+					</div>
+					<button
+						type="submit"
+						class="w-full rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition"
+					>
+						Criar conta
+					</button>
+				</form>
+				<p class="text-center text-sm text-gray-500">
+					Já tem conta?
+					<a href="/login" class="font-semibold text-brand-600 hover:text-brand-500">Entrar</a>
+				</p>
+			</div>
+		</div>
+	}
+}
