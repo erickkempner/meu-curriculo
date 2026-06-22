@@ -69,7 +69,7 @@ func Load() (*Config, error) {
 		values[r.name] = val
 	}
 
-	appPort := getEnvOrDefault("APP_PORT", "8080")
+	appPort := getEnvOrDefault("APP_PORT", getEnvOrDefault("PORT", "8080"))
 	appEnv := getEnvOrDefault("APP_ENV", "development")
 	dbSSLMode := getEnvOrDefault("DB_SSLMODE", "disable")
 
