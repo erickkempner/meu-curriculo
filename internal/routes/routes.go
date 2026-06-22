@@ -35,7 +35,6 @@ func Setup(r *gin.Engine, deps *Dependencies) {
 		authOnly.POST("/resumes/:id/share", deps.ResumeCtrl.Share)
 		authOnly.POST("/resumes/:id/photo", deps.ResumeCtrl.UploadPhoto)
 		authOnly.POST("/resumes/:id/thumbnail", deps.ResumeCtrl.UploadThumbnail)
-		authOnly.GET("/resumes/:id/thumbnail.jpg", deps.ResumeCtrl.ServeThumbnail)
 		authOnly.DELETE("/resumes/:id/share", deps.ResumeCtrl.RevokeShare)
 		authOnly.POST("/resumes/:id/share/regenerate", deps.ResumeCtrl.RegenerateShare)
 		authOnly.DELETE("/resumes/:id", deps.ResumeCtrl.Delete)
@@ -48,6 +47,7 @@ func Setup(r *gin.Engine, deps *Dependencies) {
 	{
 		protected.GET("/", deps.ResumeCtrl.List)
 		protected.GET("/resumes", deps.ResumeCtrl.List)
+		protected.GET("/resumes/:id/thumb", deps.ResumeCtrl.ServeThumbnail)
 		protected.GET("/resumes/new", deps.ResumeCtrl.CreatePage)
 		protected.POST("/resumes", deps.ResumeCtrl.Create)
 		protected.GET("/resumes/:id/edit", deps.ResumeCtrl.EditPage)

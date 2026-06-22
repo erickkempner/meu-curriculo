@@ -113,18 +113,10 @@ templ MyResumesWithData(resumes []models.Resume) {
 }
 
 templ ResumeCardWithData(r models.Resume) {
-	<div id={ fmt.Sprintf("resume-%s", r.ID.String()) } class="resume-card rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-brand-200 hover:shadow-md transition-all flex flex-col">
+	<div id={ fmt.Sprintf("resume-%s", r.ID.String()) } class="resume-card rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-brand-200 hover:shadow-lg transition-all flex flex-col">
 		<!-- Thumbnail -->
-		<div class="aspect-[3/4] max-h-56 bg-gray-50 flex items-center justify-center overflow-hidden">
-			if r.ThumbnailURL != "" {
-				<img src={ fmt.Sprintf("/resumes/%s/thumbnail.jpg", r.ID.String()) } alt={ r.Title } class="w-full h-full object-contain"/>
-			} else if r.PhotoURL != "" {
-				<img src={ r.PhotoURL } alt={ r.PersonalName } class="w-full h-full object-cover"/>
-			} else {
-				<div class="p-6 flex items-center justify-center">
-					@resumeThumbnail(r.TemplateName)
-				</div>
-			}
+		<div class="bg-gray-50 flex items-center justify-center overflow-hidden p-3" style="min-height: 200px;">
+			<img src={ fmt.Sprintf("/resumes/%s/thumb", r.ID.String()) } alt={ r.Title } class="w-full h-auto rounded-lg border border-gray-100 shadow-sm"/>
 		</div>
 		<!-- Info -->
 		<div class="px-4 pt-3 pb-2 border-t border-gray-100">

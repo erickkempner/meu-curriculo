@@ -383,7 +383,6 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 				</div>
 			</div>
 		</div>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 		<script>
 			function resumeEditorInit(resumeId, csrfToken, initialData, templateName, shareToken, hasShare, existingPhotoUrl) {
 				return {
@@ -398,7 +397,6 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 					shareUrl: shareToken ? (window.location.origin + '/r/' + shareToken) : '',
 					photoFile: null,
 					photoPreview: existingPhotoUrl || null,
-					thumbnailTimer: null,
 					steps: hasShare === 'true'
 						? ['Modelo', 'Dados Pessoais', 'Experiência', 'Educação', 'Habilidades', 'Compartilhar']
 						: ['Modelo', 'Dados Pessoais', 'Experiência', 'Educação', 'Habilidades'],
@@ -448,36 +446,6 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 							// Photo upload failure is non-blocking
 						}
 					},
-					async captureThumbnail() {
-						try {
-							if (typeof html2canvas === 'undefined') return;
-							var previewEl = document.querySelector('.resume-preview');
-							if (!previewEl) return;
-							var canvas = await html2canvas(previewEl, {
-								scale: 0.3,
-								useCORS: true,
-								logging: false
-							});
-							var dataURL = canvas.toDataURL('image/jpeg', 0.5);
-							fetch('/resumes/' + this.resumeId + '/thumbnail', {
-								method: 'POST',
-								headers: { 'Content-Type': 'application/json' },
-								body: JSON.stringify({ image: dataURL })
-							});
-						} catch(e) {
-							// Thumbnail capture failure is non-blocking
-						}
-					},
-					scheduleThumbnailCapture() {
-						if (this.thumbnailTimer) clearTimeout(this.thumbnailTimer);
-						this.thumbnailTimer = setTimeout(() => { this.captureThumbnail(); }, 500);
-					},
-					init() {
-						this.$watch('currentStep', () => { this.scheduleThumbnailCapture(); });
-						this.$watch('selectedTemplate', () => { this.scheduleThumbnailCapture(); });
-						// Initial capture after page loads
-						setTimeout(() => { this.captureThumbnail(); }, 1500);
-					},
 					async saveResume() {
 						this.saving = true;
 						this.errors = null;
@@ -522,8 +490,6 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 								if (this.photoFile) {
 									await this.uploadPhoto(this.resumeId);
 								}
-								// Capture thumbnail (fire-and-forget, don't block redirect)
-								this.captureThumbnail();
 								const redirect = resp.headers.get('HX-Redirect');
 								window.location.href = redirect || '/resumes';
 							} else if (resp.status === 422) {
