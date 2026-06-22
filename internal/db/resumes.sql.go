@@ -14,7 +14,7 @@ import (
 const createResume = `-- name: CreateResume :one
 INSERT INTO resumes (user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at
+RETURNING id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, thumbnail_url, share_token, created_at, updated_at
 `
 
 type CreateResumeParams struct {
@@ -56,6 +56,7 @@ func (q *Queries) CreateResume(ctx context.Context, arg CreateResumeParams) (Res
 		&i.Location,
 		&i.Summary,
 		&i.PhotoUrl,
+		&i.ThumbnailUrl,
 		&i.ShareToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -73,7 +74,7 @@ func (q *Queries) DeleteResume(ctx context.Context, id pgtype.UUID) error {
 }
 
 const findResumeByID = `-- name: FindResumeByID :one
-SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at FROM resumes WHERE id = $1
+SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, thumbnail_url, share_token, created_at, updated_at FROM resumes WHERE id = $1
 `
 
 func (q *Queries) FindResumeByID(ctx context.Context, id pgtype.UUID) (Resume, error) {
@@ -91,6 +92,7 @@ func (q *Queries) FindResumeByID(ctx context.Context, id pgtype.UUID) (Resume, e
 		&i.Location,
 		&i.Summary,
 		&i.PhotoUrl,
+		&i.ThumbnailUrl,
 		&i.ShareToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -99,7 +101,7 @@ func (q *Queries) FindResumeByID(ctx context.Context, id pgtype.UUID) (Resume, e
 }
 
 const findResumeByShareToken = `-- name: FindResumeByShareToken :one
-SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at FROM resumes WHERE share_token = $1
+SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, thumbnail_url, share_token, created_at, updated_at FROM resumes WHERE share_token = $1
 `
 
 func (q *Queries) FindResumeByShareToken(ctx context.Context, shareToken pgtype.Text) (Resume, error) {
@@ -117,6 +119,7 @@ func (q *Queries) FindResumeByShareToken(ctx context.Context, shareToken pgtype.
 		&i.Location,
 		&i.Summary,
 		&i.PhotoUrl,
+		&i.ThumbnailUrl,
 		&i.ShareToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -125,7 +128,7 @@ func (q *Queries) FindResumeByShareToken(ctx context.Context, shareToken pgtype.
 }
 
 const findResumesByUserID = `-- name: FindResumesByUserID :many
-SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at FROM resumes WHERE user_id = $1 ORDER BY updated_at DESC
+SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, thumbnail_url, share_token, created_at, updated_at FROM resumes WHERE user_id = $1 ORDER BY updated_at DESC
 `
 
 func (q *Queries) FindResumesByUserID(ctx context.Context, userID pgtype.UUID) ([]Resume, error) {
@@ -149,6 +152,7 @@ func (q *Queries) FindResumesByUserID(ctx context.Context, userID pgtype.UUID) (
 			&i.Location,
 			&i.Summary,
 			&i.PhotoUrl,
+			&i.ThumbnailUrl,
 			&i.ShareToken,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -223,5 +227,19 @@ func (q *Queries) UpdateResume(ctx context.Context, arg UpdateResumeParams) erro
 		arg.Summary,
 		arg.PhotoUrl,
 	)
+	return err
+}
+
+const updateThumbnailURL = `-- name: UpdateThumbnailURL :exec
+UPDATE resumes SET thumbnail_url = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateThumbnailURLParams struct {
+	ID           pgtype.UUID `json:"id"`
+	ThumbnailUrl string      `json:"thumbnail_url"`
+}
+
+func (q *Queries) UpdateThumbnailURL(ctx context.Context, arg UpdateThumbnailURLParams) error {
+	_, err := q.db.Exec(ctx, updateThumbnailURL, arg.ID, arg.ThumbnailUrl)
 	return err
 }

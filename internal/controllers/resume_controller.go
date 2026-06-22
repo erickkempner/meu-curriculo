@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/erick/curriculo/internal/middlewares"
 	"github.com/erick/curriculo/internal/models"
@@ -20,15 +22,17 @@ type PDFService interface {
 
 // ResumeController handles resume-related HTTP requests.
 type ResumeController struct {
-	resumeSvc services.ResumeService
-	pdfSvc    PDFService
+	resumeSvc  services.ResumeService
+	pdfSvc     PDFService
+	uploadsDir string
 }
 
 // NewResumeController creates a new ResumeController with the given service dependencies.
-func NewResumeController(resumeSvc services.ResumeService, pdfSvc PDFService) *ResumeController {
+func NewResumeController(resumeSvc services.ResumeService, pdfSvc PDFService, uploadsDir string) *ResumeController {
 	return &ResumeController{
-		resumeSvc: resumeSvc,
-		pdfSvc:    pdfSvc,
+		resumeSvc:  resumeSvc,
+		pdfSvc:     pdfSvc,
+		uploadsDir: uploadsDir,
 	}
 }
 
@@ -62,6 +66,9 @@ type educationRequest struct {
 
 // maxPhotoSize is the maximum allowed photo file size (2MB).
 const maxPhotoSize = 2 << 20
+
+// maxThumbnailSize is the maximum allowed thumbnail base64 payload size (512KB).
+const maxThumbnailSize = 512 << 10
 
 // allowedPhotoTypes is the set of accepted MIME types for photo uploads.
 var allowedPhotoTypes = map[string]bool{
@@ -489,7 +496,7 @@ func (ctrl *ResumeController) UploadPhoto(ctx *gin.Context) {
 
 	// Save file to uploads directory
 	filename := resumeID.String() + ext
-	savePath := fmt.Sprintf("uploads/photos/%s", filename)
+	savePath := fmt.Sprintf("%s/photos/%s", ctrl.uploadsDir, filename)
 
 	if err := ctx.SaveUploadedFile(header, savePath); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "falha ao salvar foto"})
@@ -513,6 +520,75 @@ func (ctrl *ResumeController) UploadPhoto(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"photo_url": photoURL})
+}
+
+// uploadThumbnailRequest represents the JSON body for thumbnail upload.
+type uploadThumbnailRequest struct {
+	Image string `json:"image" binding:"required"` // base64-encoded PNG data URL
+}
+
+// UploadThumbnail handles thumbnail image upload from client-side html2canvas capture.
+// It receives a base64-encoded PNG, saves it to disk, and updates the DB.
+func (ctrl *ResumeController) UploadThumbnail(ctx *gin.Context) {
+	userID, err := middlewares.GetUserIDFromContext(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	resumeID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid resume id"})
+		return
+	}
+
+	var req uploadThumbnailRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "imagem é obrigatória"})
+		return
+	}
+
+	// Validate size (rough check on base64 string length)
+	if len(req.Image) > int(maxThumbnailSize) {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "thumbnail muito grande (máx 512KB)"})
+		return
+	}
+
+	// Strip data URL prefix if present
+	imageData := req.Image
+	const pngPrefix = "data:image/png;base64,"
+	const jpegPrefix = "data:image/jpeg;base64,"
+	if len(imageData) > len(pngPrefix) && imageData[:len(pngPrefix)] == pngPrefix {
+		imageData = imageData[len(pngPrefix):]
+	} else if len(imageData) > len(jpegPrefix) && imageData[:len(jpegPrefix)] == jpegPrefix {
+		imageData = imageData[len(jpegPrefix):]
+	}
+
+	// Decode base64
+	decoded, err := base64Decode(imageData)
+	if err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "imagem inválida"})
+		return
+	}
+
+	// Save to disk
+	filename := resumeID.String() + "_thumb.png"
+	savePath := fmt.Sprintf("%s/photos/%s", ctrl.uploadsDir, filename)
+
+	if err := os.WriteFile(savePath, decoded, 0644); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "falha ao salvar thumbnail"})
+		return
+	}
+
+	// Update DB with the public URL path
+	thumbnailURL := "/uploads/photos/" + filename
+	err = ctrl.resumeSvc.UpdateThumbnailURL(ctx.Request.Context(), userID, resumeID, thumbnailURL)
+	if err != nil {
+		handleResumeErrorJSON(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"thumbnail_url": thumbnailURL})
 }
 
 // --- Internal helpers ---
@@ -564,6 +640,24 @@ func handleResumeError(ctx *gin.Context, err error) {
 		return
 	}
 	ctx.String(http.StatusInternalServerError, "internal error")
+}
+
+// handleResumeErrorJSON handles common resume errors for JSON API responses.
+func handleResumeErrorJSON(ctx *gin.Context, err error) {
+	if errors.Is(err, models.ErrNotFound) {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	if errors.Is(err, models.ErrForbidden) {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+}
+
+// base64Decode decodes a standard base64-encoded string.
+func base64Decode(data string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(data)
 }
 
 // buildShareURL constructs the public share URL from the request context.

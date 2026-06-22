@@ -97,6 +97,46 @@ templ ResumeSuccess(resume *models.Resume, shareURL string) {
 					Ver meus currículos
 				</a>
 			</div>
+			<!-- Hidden iframe for thumbnail capture -->
+			<iframe
+				id="resume-capture-frame"
+				src={ fmt.Sprintf("/resumes/%s/pdf", resume.ID.String()) }
+				class="absolute -left-[9999px] top-0 w-[794px] h-[1123px] border-0"
+				aria-hidden="true"
+				data-resume-id={ resume.ID.String() }
+			></iframe>
+			<!-- Thumbnail capture script -->
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+			<script>
+				(function() {
+					var frame = document.getElementById('resume-capture-frame');
+					var resumeId = frame.getAttribute('data-resume-id');
+					frame.addEventListener('load', function() {
+						setTimeout(function() {
+							try {
+								var doc = frame.contentDocument || frame.contentWindow.document;
+								var body = doc.body;
+								html2canvas(body, {
+									scale: 0.5,
+									width: 794,
+									height: 1123,
+									useCORS: true,
+									logging: false
+								}).then(function(canvas) {
+									var dataURL = canvas.toDataURL('image/png', 0.7);
+									fetch('/resumes/' + resumeId + '/thumbnail', {
+										method: 'POST',
+										headers: { 'Content-Type': 'application/json' },
+										body: JSON.stringify({ image: dataURL })
+									});
+								});
+							} catch(e) {
+								console.warn('Thumbnail capture failed:', e);
+							}
+						}, 1000);
+					});
+				})();
+			</script>
 		</div>
 	}
 }

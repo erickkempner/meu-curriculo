@@ -127,7 +127,33 @@ func ResumeSuccess(resume *models.Resume, shareURL string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"inline-flex items-center justify-center gap-2 rounded-lg border border-green-300 px-5 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50 transition\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"size-4\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path> <polyline points=\"7 10 12 15 17 10\"></polyline> <line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"></line></svg> Baixar PDF</a> <a href=\"/resumes\" class=\"inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition\">Ver meus currículos</a></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"inline-flex items-center justify-center gap-2 rounded-lg border border-green-300 px-5 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50 transition\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"size-4\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path> <polyline points=\"7 10 12 15 17 10\"></polyline> <line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"></line></svg> Baixar PDF</a> <a href=\"/resumes\" class=\"inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition\">Ver meus currículos</a></div><!-- Hidden iframe for thumbnail capture --><iframe id=\"resume-capture-frame\" src=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("/resumes/%s/pdf", resume.ID.String()))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/pages/resume_success.templ`, Line: 103, Col: 60}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"absolute -left-[9999px] top-0 w-[794px] h-[1123px] border-0\" aria-hidden=\"true\" data-resume-id=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(resume.ID.String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/pages/resume_success.templ`, Line: 106, Col: 39}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"></iframe><!-- Thumbnail capture script --><script src=\"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js\"></script><script>\r\n\t\t\t\t(function() {\r\n\t\t\t\t\tvar frame = document.getElementById('resume-capture-frame');\r\n\t\t\t\t\tvar resumeId = frame.getAttribute('data-resume-id');\r\n\t\t\t\t\tframe.addEventListener('load', function() {\r\n\t\t\t\t\t\tsetTimeout(function() {\r\n\t\t\t\t\t\t\ttry {\r\n\t\t\t\t\t\t\t\tvar doc = frame.contentDocument || frame.contentWindow.document;\r\n\t\t\t\t\t\t\t\tvar body = doc.body;\r\n\t\t\t\t\t\t\t\thtml2canvas(body, {\r\n\t\t\t\t\t\t\t\t\tscale: 0.5,\r\n\t\t\t\t\t\t\t\t\twidth: 794,\r\n\t\t\t\t\t\t\t\t\theight: 1123,\r\n\t\t\t\t\t\t\t\t\tuseCORS: true,\r\n\t\t\t\t\t\t\t\t\tlogging: false\r\n\t\t\t\t\t\t\t\t}).then(function(canvas) {\r\n\t\t\t\t\t\t\t\t\tvar dataURL = canvas.toDataURL('image/png', 0.7);\r\n\t\t\t\t\t\t\t\t\tfetch('/resumes/' + resumeId + '/thumbnail', {\r\n\t\t\t\t\t\t\t\t\t\tmethod: 'POST',\r\n\t\t\t\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/json' },\r\n\t\t\t\t\t\t\t\t\t\tbody: JSON.stringify({ image: dataURL })\r\n\t\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t} catch(e) {\r\n\t\t\t\t\t\t\t\tconsole.warn('Thumbnail capture failed:', e);\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}, 1000);\r\n\t\t\t\t\t});\r\n\t\t\t\t})();\r\n\t\t\t</script></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -18,6 +18,7 @@ type ResumeRepository interface {
 	FindByShareToken(ctx context.Context, token string) (db.Resume, error)
 	SetShareToken(ctx context.Context, id uuid.UUID, token *string) error
 	UpdatePhotoURL(ctx context.Context, id uuid.UUID, photoURL string) error
+	UpdateThumbnailURL(ctx context.Context, id uuid.UUID, thumbnailURL string) error
 
 	// Experience
 	CreateExperience(ctx context.Context, params db.CreateExperienceParams) (db.Experience, error)
@@ -95,6 +96,13 @@ func (r *resumeRepository) UpdatePhotoURL(ctx context.Context, id uuid.UUID, pho
 	return r.queries.UpdatePhotoURL(ctx, db.UpdatePhotoURLParams{
 		ID:       uuidToPgtype(id),
 		PhotoUrl: photoURL,
+	})
+}
+
+func (r *resumeRepository) UpdateThumbnailURL(ctx context.Context, id uuid.UUID, thumbnailURL string) error {
+	return r.queries.UpdateThumbnailURL(ctx, db.UpdateThumbnailURLParams{
+		ID:           uuidToPgtype(id),
+		ThumbnailUrl: thumbnailURL,
 	})
 }
 

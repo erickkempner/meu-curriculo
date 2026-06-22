@@ -50,7 +50,7 @@ func main() {
 	csrfMW := middlewares.NewCSRFMiddleware(sessionSvc)
 
 	authCtrl := controllers.NewAuthController(authSvc, sessionSvc)
-	resumeCtrl := controllers.NewResumeController(resumeSvc, nil) // PDFService nil for now
+	resumeCtrl := controllers.NewResumeController(resumeSvc, nil, cfg.Uploads.Dir) // PDFService nil for now
 
 	if cfg.App.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)

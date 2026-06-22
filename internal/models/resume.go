@@ -19,6 +19,7 @@ type Resume struct {
 	Location      string
 	Summary       string
 	PhotoURL      string
+	ThumbnailURL  string
 	ShareToken    *string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

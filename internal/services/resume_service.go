@@ -60,6 +60,7 @@ type ResumeService interface {
 	RegenerateShareToken(ctx context.Context, userID, resumeID uuid.UUID) (string, error)
 	GetByShareToken(ctx context.Context, token string) (*models.ResumeDetail, error)
 	UpdatePhotoURL(ctx context.Context, userID, resumeID uuid.UUID, photoURL string) error
+	UpdateThumbnailURL(ctx context.Context, userID, resumeID uuid.UUID, thumbnailURL string) error
 }
 
 // resumeService implements ResumeService using a ResumeRepository.
@@ -467,6 +468,23 @@ func (s *resumeService) UpdatePhotoURL(ctx context.Context, userID, resumeID uui
 	return s.resumeRepo.UpdatePhotoURL(ctx, resumeID, photoURL)
 }
 
+// UpdateThumbnailURL verifies ownership and updates the thumbnail URL for a resume.
+func (s *resumeService) UpdateThumbnailURL(ctx context.Context, userID, resumeID uuid.UUID, thumbnailURL string) error {
+	dbResume, err := s.resumeRepo.FindByID(ctx, resumeID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return models.ErrNotFound
+		}
+		return err
+	}
+
+	if err := s.verifyOwnership(dbResume, userID); err != nil {
+		return err
+	}
+
+	return s.resumeRepo.UpdateThumbnailURL(ctx, resumeID, thumbnailURL)
+}
+
 // --- Internal helpers ---
 
 // verifyOwnership checks that the resume belongs to the given user.
@@ -651,6 +669,7 @@ func dbResumeToModel(r db.Resume) models.Resume {
 		Location:      r.Location,
 		Summary:       r.Summary,
 		PhotoURL:      r.PhotoUrl,
+		ThumbnailURL:  r.ThumbnailUrl,
 		CreatedAt:     r.CreatedAt.Time,
 		UpdatedAt:     r.UpdatedAt.Time,
 	}

@@ -25,3 +25,6 @@ UPDATE resumes SET share_token = $2 WHERE id = $1;
 
 -- name: UpdatePhotoURL :exec
 UPDATE resumes SET photo_url = $2, updated_at = NOW() WHERE id = $1;
+
+-- name: UpdateThumbnailURL :exec
+UPDATE resumes SET thumbnail_url = $2, updated_at = NOW() WHERE id = $1;
