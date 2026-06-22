@@ -398,6 +398,7 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 					shareUrl: shareToken ? (window.location.origin + '/r/' + shareToken) : '',
 					photoFile: null,
 					photoPreview: existingPhotoUrl || null,
+					thumbnailTimer: null,
 					steps: hasShare === 'true'
 						? ['Modelo', 'Dados Pessoais', 'Experiência', 'Educação', 'Habilidades', 'Compartilhar']
 						: ['Modelo', 'Dados Pessoais', 'Experiência', 'Educação', 'Habilidades'],
@@ -458,7 +459,7 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 								logging: false
 							});
 							var dataURL = canvas.toDataURL('image/png', 0.7);
-							await fetch('/resumes/' + this.resumeId + '/thumbnail', {
+							fetch('/resumes/' + this.resumeId + '/thumbnail', {
 								method: 'POST',
 								headers: { 'Content-Type': 'application/json' },
 								body: JSON.stringify({ image: dataURL })
@@ -466,6 +467,16 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 						} catch(e) {
 							// Thumbnail capture failure is non-blocking
 						}
+					},
+					scheduleThumbnailCapture() {
+						if (this.thumbnailTimer) clearTimeout(this.thumbnailTimer);
+						this.thumbnailTimer = setTimeout(() => { this.captureThumbnail(); }, 500);
+					},
+					init() {
+						this.$watch('currentStep', () => { this.scheduleThumbnailCapture(); });
+						this.$watch('selectedTemplate', () => { this.scheduleThumbnailCapture(); });
+						// Initial capture after page loads
+						setTimeout(() => { this.captureThumbnail(); }, 1500);
 					},
 					async saveResume() {
 						this.saving = true;
