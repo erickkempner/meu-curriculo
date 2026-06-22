@@ -37,6 +37,7 @@ CREATE TABLE resumes (
     phone VARCHAR(50) NOT NULL DEFAULT '',
     location VARCHAR(200) NOT NULL DEFAULT '',
     summary TEXT NOT NULL DEFAULT '',
+    photo_url VARCHAR(500) NOT NULL DEFAULT '',
     share_token VARCHAR(36) UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

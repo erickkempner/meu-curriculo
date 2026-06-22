@@ -95,6 +95,37 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 						</div>
 						<!-- Step 1: Personal data -->
 						<div x-show="currentStep === 1" class="space-y-4">
+							<!-- Photo upload -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-1">Foto</label>
+								<div class="flex items-center gap-4">
+									<div class="shrink-0">
+										<div class="size-16 rounded-full bg-gray-100 border-2 border-gray-200 overflow-hidden flex items-center justify-center">
+											<template x-if="photoPreview">
+												<img :src="photoPreview" class="size-full object-cover" alt="Preview"/>
+											</template>
+											<template x-if="!photoPreview">
+												<svg xmlns="http://www.w3.org/2000/svg" class="size-8 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+													<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+													<circle cx="12" cy="7" r="4"></circle>
+												</svg>
+											</template>
+										</div>
+									</div>
+									<div class="flex-1">
+										<label class="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+											<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+												<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+												<polyline points="17 8 12 3 7 8"></polyline>
+												<line x1="12" y1="3" x2="12" y2="15"></line>
+											</svg>
+											<span x-text="photoFile ? 'Alterar foto' : 'Enviar foto'"></span>
+											<input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="handlePhotoSelect($event)"/>
+										</label>
+										<p class="mt-1 text-xs text-gray-400">JPEG, PNG ou WebP. Máx 2MB.</p>
+									</div>
+								</div>
+							</div>
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
 								<input type="text" x-model="data.name" placeholder="Seu nome completo" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition"/>
@@ -353,7 +384,7 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 			</div>
 		</div>
 		<script>
-			function resumeEditorInit(resumeId, csrfToken, initialData, templateName, shareToken, hasShare) {
+			function resumeEditorInit(resumeId, csrfToken, initialData, templateName, shareToken, hasShare, existingPhotoUrl) {
 				return {
 					currentStep: 0,
 					selectedTemplate: templateName || 'moderno',
@@ -364,6 +395,8 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 					csrfToken: csrfToken || '',
 					shareToken: shareToken || '',
 					shareUrl: shareToken ? (window.location.origin + '/r/' + shareToken) : '',
+					photoFile: null,
+					photoPreview: existingPhotoUrl || null,
 					steps: hasShare === 'true'
 						? ['Modelo', 'Dados Pessoais', 'Experiência', 'Educação', 'Habilidades', 'Compartilhar']
 						: ['Modelo', 'Dados Pessoais', 'Experiência', 'Educação', 'Habilidades'],
@@ -382,6 +415,36 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 						experience: [],
 						education: [],
 						skills: []
+					},
+					handlePhotoSelect(event) {
+						const file = event.target.files[0];
+						if (!file) return;
+						if (file.size > 2 * 1024 * 1024) {
+							alert('A foto deve ter no máximo 2MB.');
+							return;
+						}
+						const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+						if (!allowed.includes(file.type)) {
+							alert('Formato inválido. Use JPEG, PNG ou WebP.');
+							return;
+						}
+						this.photoFile = file;
+						const reader = new FileReader();
+						reader.onload = (e) => { this.photoPreview = e.target.result; };
+						reader.readAsDataURL(file);
+					},
+					async uploadPhoto(id) {
+						if (!this.photoFile || !id) return;
+						const formData = new FormData();
+						formData.append('photo', this.photoFile);
+						try {
+							await fetch('/resumes/' + id + '/photo', {
+								method: 'POST',
+								body: formData
+							});
+						} catch(e) {
+							// Photo upload failure is non-blocking
+						}
 					},
 					async saveResume() {
 						this.saving = true;
@@ -424,6 +487,9 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 							});
 
 							if (resp.ok) {
+								if (this.photoFile) {
+									await this.uploadPhoto(this.resumeId);
+								}
 								const redirect = resp.headers.get('HX-Redirect');
 								window.location.href = redirect || '/resumes';
 							} else if (resp.status === 422) {
@@ -516,12 +582,13 @@ func editResumeInit(resume *models.ResumeDetail, csrfToken string) string {
 		hasShare = "true"
 	}
 
-	return fmt.Sprintf(`resumeEditorInit('%s', '%s', %s, '%s', '%s', %s)`,
+	return fmt.Sprintf(`resumeEditorInit('%s', '%s', %s, '%s', '%s', '%s', '%s')`,
 		resume.ID.String(),
 		csrfToken,
 		string(dataJSON),
 		resume.TemplateName,
 		shareToken,
 		hasShare,
+		resume.PhotoURL,
 	)
 }

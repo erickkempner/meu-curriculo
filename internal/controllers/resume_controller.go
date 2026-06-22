@@ -60,6 +60,16 @@ type educationRequest struct {
 	Period      string `json:"period"`
 }
 
+// maxPhotoSize is the maximum allowed photo file size (2MB).
+const maxPhotoSize = 2 << 20
+
+// allowedPhotoTypes is the set of accepted MIME types for photo uploads.
+var allowedPhotoTypes = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/webp": true,
+}
+
 // List renders the user's resume list.
 func (ctrl *ResumeController) List(ctx *gin.Context) {
 	userID, err := middlewares.GetUserIDFromContext(ctx)
@@ -431,6 +441,78 @@ func (ctrl *ResumeController) PublicView(ctx *gin.Context) {
 	}
 
 	render(ctx, http.StatusOK, pages.ResumePrintView(detail))
+}
+
+// UploadPhoto handles photo file upload for a resume.
+// It saves the file to disk under uploads/<resumeID>.<ext> and updates the DB.
+func (ctrl *ResumeController) UploadPhoto(ctx *gin.Context) {
+	userID, err := middlewares.GetUserIDFromContext(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	resumeID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid resume id"})
+		return
+	}
+
+	file, header, err := ctx.Request.FormFile("photo")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "foto é obrigatória"})
+		return
+	}
+	defer file.Close()
+
+	// Validate file size
+	if header.Size > maxPhotoSize {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "foto deve ter no máximo 2MB"})
+		return
+	}
+
+	// Validate MIME type
+	contentType := header.Header.Get("Content-Type")
+	if !allowedPhotoTypes[contentType] {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "formato inválido. Use JPEG, PNG ou WebP"})
+		return
+	}
+
+	// Determine file extension
+	ext := ".jpg"
+	switch contentType {
+	case "image/png":
+		ext = ".png"
+	case "image/webp":
+		ext = ".webp"
+	}
+
+	// Save file to uploads directory
+	filename := resumeID.String() + ext
+	savePath := fmt.Sprintf("uploads/photos/%s", filename)
+
+	if err := ctx.SaveUploadedFile(header, savePath); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "falha ao salvar foto"})
+		return
+	}
+
+	// Update DB with the public URL path
+	photoURL := "/uploads/photos/" + filename
+	err = ctrl.resumeSvc.UpdatePhotoURL(ctx.Request.Context(), userID, resumeID, photoURL)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		if errors.Is(err, models.ErrForbidden) {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"photo_url": photoURL})
 }
 
 // --- Internal helpers ---

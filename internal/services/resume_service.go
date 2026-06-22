@@ -23,6 +23,7 @@ type CreateResumeInput struct {
 	Phone         string
 	Location      string
 	Summary       string
+	PhotoURL      string
 	Experience    []ExperienceInput
 	Education     []EducationInput
 	Skills        []string
@@ -58,6 +59,7 @@ type ResumeService interface {
 	RevokeShareToken(ctx context.Context, userID, resumeID uuid.UUID) error
 	RegenerateShareToken(ctx context.Context, userID, resumeID uuid.UUID) (string, error)
 	GetByShareToken(ctx context.Context, token string) (*models.ResumeDetail, error)
+	UpdatePhotoURL(ctx context.Context, userID, resumeID uuid.UUID, photoURL string) error
 }
 
 // resumeService implements ResumeService using a ResumeRepository.
@@ -121,6 +123,7 @@ func (s *resumeService) Create(ctx context.Context, userID uuid.UUID, input Crea
 		Phone:         sanitized.Phone,
 		Location:      sanitized.Location,
 		Summary:       sanitized.Summary,
+		PhotoUrl:      sanitized.PhotoURL,
 	})
 	if err != nil {
 		return nil, err
@@ -205,6 +208,7 @@ func (s *resumeService) Update(ctx context.Context, userID, resumeID uuid.UUID, 
 		Phone:         sanitized.Phone,
 		Location:      sanitized.Location,
 		Summary:       sanitized.Summary,
+		PhotoUrl:      sanitized.PhotoURL,
 	})
 	if err != nil {
 		return err
@@ -309,6 +313,7 @@ func (s *resumeService) Duplicate(ctx context.Context, userID, resumeID uuid.UUI
 		Phone:         dbResume.Phone,
 		Location:      dbResume.Location,
 		Summary:       dbResume.Summary,
+		PhotoUrl:      dbResume.PhotoUrl,
 	})
 	if err != nil {
 		return nil, err
@@ -443,6 +448,23 @@ func (s *resumeService) GetByShareToken(ctx context.Context, token string) (*mod
 	}
 
 	return s.loadResumeDetail(ctx, dbResume)
+}
+
+// UpdatePhotoURL verifies ownership and updates the photo URL for a resume.
+func (s *resumeService) UpdatePhotoURL(ctx context.Context, userID, resumeID uuid.UUID, photoURL string) error {
+	dbResume, err := s.resumeRepo.FindByID(ctx, resumeID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return models.ErrNotFound
+		}
+		return err
+	}
+
+	if err := s.verifyOwnership(dbResume, userID); err != nil {
+		return err
+	}
+
+	return s.resumeRepo.UpdatePhotoURL(ctx, resumeID, photoURL)
 }
 
 // --- Internal helpers ---
@@ -580,6 +602,7 @@ func sanitizeResumeInput(input CreateResumeInput) CreateResumeInput {
 		Phone:         validators.TrimAndSanitize(input.Phone),
 		Location:      validators.TrimAndSanitize(input.Location),
 		Summary:       validators.TrimAndSanitize(input.Summary),
+		PhotoURL:      input.PhotoURL, // PhotoURL is a server-controlled path, no sanitization needed
 	}
 
 	// Sanitize experience entries
@@ -627,6 +650,7 @@ func dbResumeToModel(r db.Resume) models.Resume {
 		Phone:         r.Phone,
 		Location:      r.Location,
 		Summary:       r.Summary,
+		PhotoURL:      r.PhotoUrl,
 		CreatedAt:     r.CreatedAt.Time,
 		UpdatedAt:     r.UpdatedAt.Time,
 	}

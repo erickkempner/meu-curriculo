@@ -12,9 +12,9 @@ import (
 )
 
 const createResume = `-- name: CreateResume :one
-INSERT INTO resumes (user_id, title, template_name, personal_name, personal_title, email, phone, location, summary)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, share_token, created_at, updated_at
+INSERT INTO resumes (user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at
 `
 
 type CreateResumeParams struct {
@@ -27,6 +27,7 @@ type CreateResumeParams struct {
 	Phone         string      `json:"phone"`
 	Location      string      `json:"location"`
 	Summary       string      `json:"summary"`
+	PhotoUrl      string      `json:"photo_url"`
 }
 
 func (q *Queries) CreateResume(ctx context.Context, arg CreateResumeParams) (Resume, error) {
@@ -40,6 +41,7 @@ func (q *Queries) CreateResume(ctx context.Context, arg CreateResumeParams) (Res
 		arg.Phone,
 		arg.Location,
 		arg.Summary,
+		arg.PhotoUrl,
 	)
 	var i Resume
 	err := row.Scan(
@@ -53,6 +55,7 @@ func (q *Queries) CreateResume(ctx context.Context, arg CreateResumeParams) (Res
 		&i.Phone,
 		&i.Location,
 		&i.Summary,
+		&i.PhotoUrl,
 		&i.ShareToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -70,7 +73,7 @@ func (q *Queries) DeleteResume(ctx context.Context, id pgtype.UUID) error {
 }
 
 const findResumeByID = `-- name: FindResumeByID :one
-SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, share_token, created_at, updated_at FROM resumes WHERE id = $1
+SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at FROM resumes WHERE id = $1
 `
 
 func (q *Queries) FindResumeByID(ctx context.Context, id pgtype.UUID) (Resume, error) {
@@ -87,6 +90,7 @@ func (q *Queries) FindResumeByID(ctx context.Context, id pgtype.UUID) (Resume, e
 		&i.Phone,
 		&i.Location,
 		&i.Summary,
+		&i.PhotoUrl,
 		&i.ShareToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -95,7 +99,7 @@ func (q *Queries) FindResumeByID(ctx context.Context, id pgtype.UUID) (Resume, e
 }
 
 const findResumeByShareToken = `-- name: FindResumeByShareToken :one
-SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, share_token, created_at, updated_at FROM resumes WHERE share_token = $1
+SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at FROM resumes WHERE share_token = $1
 `
 
 func (q *Queries) FindResumeByShareToken(ctx context.Context, shareToken pgtype.Text) (Resume, error) {
@@ -112,6 +116,7 @@ func (q *Queries) FindResumeByShareToken(ctx context.Context, shareToken pgtype.
 		&i.Phone,
 		&i.Location,
 		&i.Summary,
+		&i.PhotoUrl,
 		&i.ShareToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -120,7 +125,7 @@ func (q *Queries) FindResumeByShareToken(ctx context.Context, shareToken pgtype.
 }
 
 const findResumesByUserID = `-- name: FindResumesByUserID :many
-SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, share_token, created_at, updated_at FROM resumes WHERE user_id = $1 ORDER BY updated_at DESC
+SELECT id, user_id, title, template_name, personal_name, personal_title, email, phone, location, summary, photo_url, share_token, created_at, updated_at FROM resumes WHERE user_id = $1 ORDER BY updated_at DESC
 `
 
 func (q *Queries) FindResumesByUserID(ctx context.Context, userID pgtype.UUID) ([]Resume, error) {
@@ -143,6 +148,7 @@ func (q *Queries) FindResumesByUserID(ctx context.Context, userID pgtype.UUID) (
 			&i.Phone,
 			&i.Location,
 			&i.Summary,
+			&i.PhotoUrl,
 			&i.ShareToken,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -171,9 +177,23 @@ func (q *Queries) SetShareToken(ctx context.Context, arg SetShareTokenParams) er
 	return err
 }
 
+const updatePhotoURL = `-- name: UpdatePhotoURL :exec
+UPDATE resumes SET photo_url = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdatePhotoURLParams struct {
+	ID       pgtype.UUID `json:"id"`
+	PhotoUrl string      `json:"photo_url"`
+}
+
+func (q *Queries) UpdatePhotoURL(ctx context.Context, arg UpdatePhotoURLParams) error {
+	_, err := q.db.Exec(ctx, updatePhotoURL, arg.ID, arg.PhotoUrl)
+	return err
+}
+
 const updateResume = `-- name: UpdateResume :exec
 UPDATE resumes SET title=$2, template_name=$3, personal_name=$4, personal_title=$5,
-    email=$6, phone=$7, location=$8, summary=$9, updated_at=NOW()
+    email=$6, phone=$7, location=$8, summary=$9, photo_url=$10, updated_at=NOW()
 WHERE id = $1
 `
 
@@ -187,6 +207,7 @@ type UpdateResumeParams struct {
 	Phone         string      `json:"phone"`
 	Location      string      `json:"location"`
 	Summary       string      `json:"summary"`
+	PhotoUrl      string      `json:"photo_url"`
 }
 
 func (q *Queries) UpdateResume(ctx context.Context, arg UpdateResumeParams) error {
@@ -200,6 +221,7 @@ func (q *Queries) UpdateResume(ctx context.Context, arg UpdateResumeParams) erro
 		arg.Phone,
 		arg.Location,
 		arg.Summary,
+		arg.PhotoUrl,
 	)
 	return err
 }

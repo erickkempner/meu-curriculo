@@ -38,6 +38,7 @@ type Resume struct {
 	Phone         string             `json:"phone"`
 	Location      string             `json:"location"`
 	Summary       string             `json:"summary"`
+	PhotoUrl      string             `json:"photo_url"`
 	ShareToken    pgtype.Text        `json:"share_token"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`

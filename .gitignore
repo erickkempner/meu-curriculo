@@ -22,3 +22,7 @@ temp/
 
 .env
 env
+
+# Uploaded files (keep directory structure via .gitkeep)
+uploads/photos/*
+!uploads/photos/.gitkeep
