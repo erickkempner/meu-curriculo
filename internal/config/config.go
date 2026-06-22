@@ -27,6 +27,7 @@ type DatabaseConfig struct {
 	Password string
 	Name     string
 	SSLMode  string
+	Extra    string // Additional connection params (e.g. channel_binding=require)
 }
 
 // SessionConfig holds session management parameters.
@@ -38,10 +39,14 @@ type SessionConfig struct {
 
 // DSN returns the PostgreSQL connection string.
 func (d DatabaseConfig) DSN() string {
-	return fmt.Sprintf(
+	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		d.Host, d.Port, d.User, d.Password, d.Name, d.SSLMode,
 	)
+	if d.Extra != "" {
+		dsn += " " + d.Extra
+	}
+	return dsn
 }
 
 // Load reads configuration from environment variables.
@@ -72,6 +77,7 @@ func Load() (*Config, error) {
 	appPort := getEnvOrDefault("APP_PORT", getEnvOrDefault("PORT", "8080"))
 	appEnv := getEnvOrDefault("APP_ENV", "development")
 	dbSSLMode := getEnvOrDefault("DB_SSLMODE", "disable")
+	dbExtra := getEnvOrDefault("DB_EXTRA", "")
 
 	cfg := &Config{
 		App: AppConfig{
@@ -85,6 +91,7 @@ func Load() (*Config, error) {
 			Password: values["DB_PASSWORD"],
 			Name:     values["DB_NAME"],
 			SSLMode:  dbSSLMode,
+			Extra:    dbExtra,
 		},
 		Session: SessionConfig{
 			Secret:     values["SESSION_SECRET"],
