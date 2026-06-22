@@ -117,13 +117,13 @@ templ ResumeSuccess(resume *models.Resume, shareURL string) {
 								var doc = frame.contentDocument || frame.contentWindow.document;
 								var body = doc.body;
 								html2canvas(body, {
-									scale: 0.5,
+									scale: 0.3,
 									width: 794,
 									height: 1123,
 									useCORS: true,
 									logging: false
 								}).then(function(canvas) {
-									var dataURL = canvas.toDataURL('image/png', 0.7);
+									var dataURL = canvas.toDataURL('image/jpeg', 0.5);
 									fetch('/resumes/' + resumeId + '/thumbnail', {
 										method: 'POST',
 										headers: { 'Content-Type': 'application/json' },

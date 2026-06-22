@@ -61,6 +61,7 @@ type ResumeService interface {
 	GetByShareToken(ctx context.Context, token string) (*models.ResumeDetail, error)
 	UpdatePhotoURL(ctx context.Context, userID, resumeID uuid.UUID, photoURL string) error
 	UpdateThumbnailURL(ctx context.Context, userID, resumeID uuid.UUID, thumbnailURL string) error
+	GetThumbnailURL(ctx context.Context, resumeID uuid.UUID) (string, error)
 }
 
 // resumeService implements ResumeService using a ResumeRepository.
@@ -483,6 +484,19 @@ func (s *resumeService) UpdateThumbnailURL(ctx context.Context, userID, resumeID
 	}
 
 	return s.resumeRepo.UpdateThumbnailURL(ctx, resumeID, thumbnailURL)
+}
+
+// GetThumbnailURL returns the thumbnail data URL for a resume (no ownership check — used for serving images).
+func (s *resumeService) GetThumbnailURL(ctx context.Context, resumeID uuid.UUID) (string, error) {
+	dbResume, err := s.resumeRepo.FindByID(ctx, resumeID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return "", models.ErrNotFound
+		}
+		return "", err
+	}
+
+	return dbResume.ThumbnailUrl, nil
 }
 
 // --- Internal helpers ---

@@ -35,6 +35,7 @@ func Setup(r *gin.Engine, deps *Dependencies) {
 		authOnly.POST("/resumes/:id/share", deps.ResumeCtrl.Share)
 		authOnly.POST("/resumes/:id/photo", deps.ResumeCtrl.UploadPhoto)
 		authOnly.POST("/resumes/:id/thumbnail", deps.ResumeCtrl.UploadThumbnail)
+		authOnly.GET("/resumes/:id/thumbnail.jpg", deps.ResumeCtrl.ServeThumbnail)
 		authOnly.DELETE("/resumes/:id/share", deps.ResumeCtrl.RevokeShare)
 		authOnly.POST("/resumes/:id/share/regenerate", deps.ResumeCtrl.RegenerateShare)
 		authOnly.DELETE("/resumes/:id", deps.ResumeCtrl.Delete)

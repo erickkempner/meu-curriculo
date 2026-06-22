@@ -117,7 +117,7 @@ templ ResumeCardWithData(r models.Resume) {
 		<!-- Thumbnail -->
 		<div class="aspect-[3/4] max-h-56 bg-gray-50 flex items-center justify-center overflow-hidden">
 			if r.ThumbnailURL != "" {
-				<img src={ r.ThumbnailURL } alt={ r.Title } class="w-full h-full object-contain"/>
+				<img src={ fmt.Sprintf("/resumes/%s/thumbnail.jpg", r.ID.String()) } alt={ r.Title } class="w-full h-full object-contain"/>
 			} else if r.PhotoURL != "" {
 				<img src={ r.PhotoURL } alt={ r.PersonalName } class="w-full h-full object-cover"/>
 			} else {

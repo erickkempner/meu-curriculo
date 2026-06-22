@@ -454,11 +454,11 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 							var previewEl = document.querySelector('.resume-preview');
 							if (!previewEl) return;
 							var canvas = await html2canvas(previewEl, {
-								scale: 0.5,
+								scale: 0.3,
 								useCORS: true,
 								logging: false
 							});
-							var dataURL = canvas.toDataURL('image/png', 0.7);
+							var dataURL = canvas.toDataURL('image/jpeg', 0.5);
 							fetch('/resumes/' + this.resumeId + '/thumbnail', {
 								method: 'POST',
 								headers: { 'Content-Type': 'application/json' },
@@ -522,8 +522,8 @@ templ EditResumeWithCSRF(resume *models.ResumeDetail, csrfToken string) {
 								if (this.photoFile) {
 									await this.uploadPhoto(this.resumeId);
 								}
-								// Capture thumbnail from live preview
-								await this.captureThumbnail();
+								// Capture thumbnail (fire-and-forget, don't block redirect)
+								this.captureThumbnail();
 								const redirect = resp.headers.get('HX-Redirect');
 								window.location.href = redirect || '/resumes';
 							} else if (resp.status === 422) {

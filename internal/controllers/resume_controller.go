@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/erick/curriculo/internal/middlewares"
 	"github.com/erick/curriculo/internal/models"
@@ -65,8 +67,8 @@ type educationRequest struct {
 // maxPhotoSize is the maximum allowed photo file size (2MB).
 const maxPhotoSize = 2 << 20
 
-// maxThumbnailSize is the maximum allowed thumbnail base64 payload size (512KB).
-const maxThumbnailSize = 512 << 10
+// maxThumbnailSize is the maximum allowed thumbnail base64 payload size (2MB).
+const maxThumbnailSize = 2 << 20
 
 // allowedPhotoTypes is the set of accepted MIME types for photo uploads.
 var allowedPhotoTypes = map[string]bool{
@@ -552,8 +554,8 @@ func (ctrl *ResumeController) UploadThumbnail(ctx *gin.Context) {
 		return
 	}
 
-	// Validate it's a valid data URL
-	if len(req.Image) < 22 || (req.Image[:22] != "data:image/png;base64," && req.Image[:23] != "data:image/jpeg;base64,") {
+	// Validate it's a valid data URL (must start with data:image/)
+	if len(req.Image) < 20 || req.Image[:11] != "data:image/" {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "formato de imagem inválido"})
 		return
 	}
@@ -566,6 +568,47 @@ func (ctrl *ResumeController) UploadThumbnail(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"thumbnail_url": "stored"})
+}
+
+// ServeThumbnail serves the thumbnail image for a resume from the database.
+// This endpoint is public (accessible by the resume owner viewing their list).
+func (ctrl *ResumeController) ServeThumbnail(ctx *gin.Context) {
+	resumeID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	dataURL, err := ctrl.resumeSvc.GetThumbnailURL(ctx.Request.Context(), resumeID)
+	if err != nil || dataURL == "" {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	// Parse data URL: data:image/jpeg;base64,<data>
+	parts := strings.SplitN(dataURL, ",", 2)
+	if len(parts) != 2 {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	// Determine content type from header
+	contentType := "image/jpeg"
+	if strings.Contains(parts[0], "image/png") {
+		contentType = "image/png"
+	} else if strings.Contains(parts[0], "image/webp") {
+		contentType = "image/webp"
+	}
+
+	// Decode base64
+	imageBytes, err := base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	ctx.Header("Cache-Control", "public, max-age=300")
+	ctx.Data(http.StatusOK, contentType, imageBytes)
 }
 
 // --- Internal helpers ---
