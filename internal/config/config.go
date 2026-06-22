@@ -11,6 +11,12 @@ type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
 	Session  SessionConfig
+	Uploads  UploadsConfig
+}
+
+// UploadsConfig holds file upload storage configuration.
+type UploadsConfig struct {
+	Dir string // Base directory for uploads (default: "./uploads")
 }
 
 // AppConfig holds HTTP server configuration.
@@ -79,6 +85,8 @@ func Load() (*Config, error) {
 	dbSSLMode := getEnvOrDefault("DB_SSLMODE", "disable")
 	dbExtra := getEnvOrDefault("DB_EXTRA", "")
 
+	uploadsDir := getEnvOrDefault("UPLOADS_DIR", "./uploads")
+
 	cfg := &Config{
 		App: AppConfig{
 			Port: appPort,
@@ -97,6 +105,9 @@ func Load() (*Config, error) {
 			Secret:     values["SESSION_SECRET"],
 			MaxAge:     7 * 24 * time.Hour,
 			CookieName: "session_token",
+		},
+		Uploads: UploadsConfig{
+			Dir: uploadsDir,
 		},
 	}
 

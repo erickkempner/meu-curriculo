@@ -57,14 +57,15 @@ func main() {
 	}
 
 	// Ensure uploads directory exists
-	if err := os.MkdirAll("uploads/photos", 0755); err != nil {
+	photosDir := cfg.Uploads.Dir + "/photos"
+	if err := os.MkdirAll(photosDir, 0755); err != nil {
 		log.Fatalf("Failed to create uploads directory: %v", err)
 	}
 
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 	r.Static("/assets", "./assets")
-	r.Static("/uploads", "./uploads")
+	r.Static("/uploads", cfg.Uploads.Dir)
 
 	routes.Setup(r, &routes.Dependencies{
 		AuthCtrl:       authCtrl,

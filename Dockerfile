@@ -19,6 +19,8 @@ WORKDIR /app
 COPY --from=builder /app/server .
 COPY --from=builder /app/assets ./assets
 
+ENV UPLOADS_DIR=/tmp/uploads
+
 USER appuser
 
 CMD ["./server"]
